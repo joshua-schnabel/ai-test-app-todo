@@ -1,0 +1,12 @@
+<label class="form-field">
+  <span class="form-label">Sortieren</span>
+  <select class="form-select sort-select" [value]="selectedValue" (change)="onSortChange($event)">
+    <option value="dueDate-asc">Fälligkeitsdatum ↑</option>
+    <option value="dueDate-desc">Fälligkeitsdatum ↓</option>
+    <option value="priority-desc">Priorität ↑</option>
+    <option value="priority-asc">Priorität ↓</option>
+    <option value="createdAt-desc">Erstellungsdatum ↓</option>
+    <option value="createdAt-asc">Erstellungsdatum ↑</option>
+    <option value="status-asc">Status</option>
+  </select>
+</label>

@@ -1,0 +1,51 @@
+<section class="auth-page">
+  <div class="auth-card app-card">
+    <header class="auth-card__header">
+      <h1>Todo Webapp</h1>
+      <p class="auth-card__subtitle">Melde dich an, um deine Aufgaben zu verwalten.</p>
+    </header>
+
+    @if (errorMessage) {
+      <app-error-message [message]="errorMessage" />
+    }
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-field">
+        <label class="form-label" for="email">E-Mail-Adresse</label>
+        <input id="email" class="form-input" type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <span class="validation-message">E-Mail-Adresse ist erforderlich</span>
+        }
+        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <span class="validation-message">Bitte gib eine gültige E-Mail-Adresse ein</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="password">Passwort</label>
+        <input
+          id="password"
+          class="form-input"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+        />
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+          <span class="validation-message">Passwort ist erforderlich</span>
+        }
+        @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+          <span class="validation-message">Passwort muss mindestens 8 Zeichen lang sein</span>
+        }
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Anmeldung läuft ...' : 'Anmelden' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Noch kein Konto?
+      <a routerLink="/register">Jetzt registrieren</a>
+    </p>
+  </div>
+</section>

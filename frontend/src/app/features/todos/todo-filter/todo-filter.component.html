@@ -1,0 +1,12 @@
+<div class="filter-group" role="tablist" aria-label="Aufgaben filtern">
+  @for (item of filters; track item.key) {
+    <button
+      class="filter-button"
+      type="button"
+      [class.filter-button--active]="item.key === selectedKey"
+      (click)="applyFilter(item.key)"
+    >
+      {{ item.label }}
+    </button>
+  }
+</div>

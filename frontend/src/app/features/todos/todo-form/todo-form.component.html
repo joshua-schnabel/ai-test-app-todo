@@ -1,0 +1,41 @@
+<form class="todo-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="todo-form__grid">
+    <div class="form-field">
+      <label class="form-label" for="todo-title">Titel</label>
+      <input id="todo-title" class="form-input" type="text" formControlName="title" />
+      @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+        <span class="validation-message">Titel ist erforderlich</span>
+      }
+      @if (form.controls.title.touched && form.controls.title.hasError('maxlength')) {
+        <span class="validation-message">Titel darf maximal 120 Zeichen lang sein</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="todo-description">Beschreibung</label>
+      <textarea id="todo-description" class="form-textarea" formControlName="description"></textarea>
+      @if (form.controls.description.touched && form.controls.description.hasError('maxlength')) {
+        <span class="validation-message">Beschreibung darf maximal 1000 Zeichen lang sein</span>
+      }
+    </div>
+
+    <label class="form-field" for="todo-priority">
+      <span class="form-label">Priorität</span>
+      <select id="todo-priority" class="form-select" formControlName="priority">
+        @for (priority of priorities; track priority) {
+          <option [value]="priority">{{ priority }}</option>
+        }
+      </select>
+    </label>
+
+    <div class="form-field">
+      <label class="form-label" for="todo-dueDate">Fälligkeitsdatum</label>
+      <input id="todo-dueDate" class="form-input" type="date" formControlName="dueDate" />
+    </div>
+  </div>
+
+  <div class="todo-form__actions">
+    <button class="btn btn-primary" type="submit">{{ existingTodo ? 'Aufgabe speichern' : 'Aufgabe erstellen' }}</button>
+    <button class="btn btn-ghost" type="button" (click)="cancel.emit()">Abbrechen</button>
+  </div>
+</form>

@@ -1,0 +1,45 @@
+<section class="todo-view">
+  <header class="todo-view__header">
+    <div>
+      <h2>{{ listName }}</h2>
+      <p>Behalte Prioritäten, Fristen und den Status deiner Aufgaben im Blick.</p>
+    </div>
+
+    <button class="btn btn-primary" type="button" (click)="startCreate()">Aufgabe erstellen</button>
+  </header>
+
+  @if (showForm) {
+    <section class="todo-view__form app-card">
+      <strong>{{ editingTodo ? 'Aufgabe bearbeiten' : 'Neue Aufgabe' }}</strong>
+      <app-todo-form [existingTodo]="editingTodo" (save)="saveTodo($event)" (cancel)="cancelEdit()" />
+    </section>
+  }
+
+  <section class="todo-view__controls">
+    <app-todo-filter (filterChange)="updateFilter($event)" />
+    <app-todo-sort (sortChange)="updateSort($event)" />
+  </section>
+
+  @if (errorMessage) {
+    <app-error-message [message]="errorMessage" />
+  }
+
+  @if (isLoading) {
+    <app-loading-spinner />
+  } @else if (!todos.length && hasActiveFilter()) {
+    <app-empty-state message="Keine passenden Aufgaben gefunden" />
+  } @else if (!todos.length) {
+    <app-empty-state message="Noch keine Aufgaben vorhanden" />
+  } @else {
+    <div class="todo-view__list">
+      @for (todo of todos; track trackByTodoId($index, todo)) {
+        <app-todo-item
+          [todo]="todo"
+          (toggleStatus)="toggleTodo($event)"
+          (editTodo)="startEdit($event)"
+          (deleteTodo)="deleteTodo($event)"
+        />
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,62 @@
+<div class="page-shell list-page">
+  <header class="page-header app-card">
+    <div class="page-header__copy">
+      <h1>Todo Webapp</h1>
+      <p>Organisiere Listen und Aufgaben in einer mobilen Ansicht.</p>
+    </div>
+
+    <button class="btn btn-ghost" type="button" (click)="logout()">Logout</button>
+  </header>
+
+  <div class="workspace">
+    <aside class="sidebar app-card">
+      <div class="sidebar__header">
+        <h2>Meine Listen</h2>
+        <button class="btn btn-primary" type="button" (click)="openCreateForm()">Liste erstellen</button>
+      </div>
+
+      @if (showForm) {
+        <section class="sidebar__form">
+          <strong>{{ editingList ? 'Liste bearbeiten' : 'Neue Liste' }}</strong>
+          <p>{{ editingList ? 'Passe den Namen deiner Liste an.' : 'Lege eine neue Aufgabenliste an.' }}</p>
+          <app-list-form [existingList]="editingList" (submitName)="saveList($event)" (cancel)="cancelForm()" />
+        </section>
+      }
+
+      @if (errorMessage) {
+        <app-error-message [message]="errorMessage" />
+      }
+
+      @if (isLoading) {
+        <app-loading-spinner />
+      } @else if (!lists.length) {
+        <app-empty-state message="Noch keine Listen vorhanden" />
+      } @else {
+        <div class="list-collection">
+          @for (list of lists; track trackByListId($index, list)) {
+            <article class="list-card" [class.list-card--active]="list.id === selectedListId">
+              <button class="list-card__main" type="button" [routerLink]="['/lists', list.id]">
+                <strong>{{ list.name }}</strong>
+                <small>Zuletzt geändert: {{ list.updatedAt | date: 'dd.MM.yyyy, HH:mm' }}</small>
+              </button>
+
+              <div class="list-card__actions">
+                <button class="btn btn-secondary" type="button" (click)="openEditForm(list)">Bearbeiten</button>
+                <button class="btn btn-danger" type="button" (click)="deleteList(list)">Löschen</button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </aside>
+
+    <section class="content-panel app-card">
+      <div class="content-panel__placeholder">
+        <router-outlet />
+        @if (!selectedListId && !lists.length && !isLoading) {
+          <app-empty-state message="Noch keine Listen vorhanden" />
+        }
+      </div>
+    </section>
+  </div>
+</div>

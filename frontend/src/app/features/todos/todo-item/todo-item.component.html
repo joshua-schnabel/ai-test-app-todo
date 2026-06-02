@@ -1,0 +1,31 @@
+<article class="todo-item app-card" [class.todo-item--done]="todo.status === 'DONE'" [class.todo-item--overdue]="isOverdue">
+  <div class="todo-item__header">
+    <input
+      class="todo-item__toggle"
+      type="checkbox"
+      [checked]="todo.status === 'DONE'"
+      [attr.aria-label]="todo.status === 'DONE' ? 'Aufgabe erneut öffnen' : 'Aufgabe erledigen'"
+      (change)="toggleStatus.emit(todo)"
+    />
+
+    <div class="todo-item__title">
+      <h3 [class.done]="todo.status === 'DONE'">{{ todo.title }}</h3>
+      @if (todo.description) {
+        <p class="todo-item__description">{{ todo.description }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="todo-item__meta">
+    <span class="badge" [class]="'badge ' + priorityClass">Priorität: {{ todo.priority }}</span>
+    <span class="badge" [class.badge--overdue]="isOverdue">Status: {{ todo.status === 'DONE' ? 'Erledigt' : 'Offen' }}</span>
+    @if (dueDateLabel) {
+      <span class="badge" [class.badge--overdue]="isOverdue">Fällig: {{ dueDateLabel }}</span>
+    }
+  </div>
+
+  <div class="todo-item__actions">
+    <button class="btn btn-secondary" type="button" (click)="editTodo.emit(todo)">Bearbeiten</button>
+    <button class="btn btn-danger" type="button" (click)="deleteTodo.emit(todo)">Löschen</button>
+  </div>
+</article>
