@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, timeout } from 'rxjs';
 
 import { TodoList } from '../../../core/models/todo-list.model';
 import { CreateTodoRequest, Todo, TodoFilter, TodoSort, UpdateTodoRequest } from '../../../core/models/todo.model';
@@ -80,22 +80,27 @@ export class TodoListViewComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly todoService = inject(TodoService);
   private readonly todoListService = inject(TodoListService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   listId = '';
   listName = 'Aufgaben';
   todos: Todo[] = [];
   isLoading = true;
+  isSaving = false;
   errorMessage = '';
   showForm = false;
   editingTodo: Todo | undefined;
   currentFilter: TodoFilter = {};
   currentSort: TodoSort = { sortBy: 'createdAt', sortDir: 'desc' };
+  private todosLoadRequestId = 0;
 
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const nextListId = params.get('listId');
 
       if (!nextListId) {
+        this.isLoading = false;
+        this.cdr.markForCheck();
         return;
       }
 
@@ -133,19 +138,27 @@ export class TodoListViewComponent implements OnInit {
   }
 
   saveTodo(request: CreateTodoRequest | UpdateTodoRequest): void {
+    if (this.isSaving) {
+      return;
+    }
+
     const request$ = this.editingTodo
       ? this.todoService.updateTodo(this.listId, this.editingTodo.id, request)
       : this.todoService.createTodo(this.listId, request as CreateTodoRequest);
 
-    request$.subscribe({
-      next: () => {
-        this.cancelEdit();
-        this.loadTodos();
-      },
-      error: () => {
-        this.errorMessage = 'Daten konnten nicht geladen werden';
-      }
-    });
+    this.isSaving = true;
+    request$
+      .pipe(finalize(() => { this.isSaving = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: () => {
+          this.cancelEdit();
+          this.loadTodos();
+        },
+        error: () => {
+          this.errorMessage = 'Daten konnten nicht geladen werden';
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   toggleTodo(todo: Todo): void {
@@ -157,12 +170,13 @@ export class TodoListViewComponent implements OnInit {
       next: () => this.loadTodos(),
       error: () => {
         this.errorMessage = 'Daten konnten nicht geladen werden';
+        this.cdr.markForCheck();
       }
     });
   }
 
   deleteTodo(todo: Todo): void {
-    if (!window.confirm(`Aufgabe „${todo.title}“ wirklich löschen?`)) {
+    if (!window.confirm(`Aufgabe „${todo.title}" wirklich löschen?`)) {
       return;
     }
 
@@ -170,6 +184,7 @@ export class TodoListViewComponent implements OnInit {
       next: () => this.loadTodos(),
       error: () => {
         this.errorMessage = 'Daten konnten nicht geladen werden';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -187,26 +202,51 @@ export class TodoListViewComponent implements OnInit {
       return;
     }
 
+    const requestId = ++this.todosLoadRequestId;
     this.isLoading = true;
     this.errorMessage = '';
 
     this.todoService
       .getTodos(this.listId, this.currentFilter, this.currentSort)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(timeout(10000))
+      .pipe(
+        finalize(() => {
+          if (requestId === this.todosLoadRequestId) {
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          }
+        })
+      )
       .subscribe({
         next: (todos) => {
+          if (requestId !== this.todosLoadRequestId) {
+            return;
+          }
           this.todos = todos;
+          this.cdr.markForCheck();
         },
         error: () => {
+          if (requestId !== this.todosLoadRequestId) {
+            return;
+          }
           this.errorMessage = 'Daten konnten nicht geladen werden';
+          this.cdr.markForCheck();
         }
       });
   }
 
   private loadListName(): void {
-    this.todoListService.getLists().subscribe({
+    this.todoListService
+      .getLists()
+      .pipe(timeout(10000))
+      .subscribe({
       next: (lists: TodoList[]) => {
         this.listName = lists.find((list) => list.id === this.listId)?.name ?? 'Aufgaben';
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.listName = 'Aufgaben';
+        this.cdr.markForCheck();
       }
     });
   }
