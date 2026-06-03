@@ -46,66 +46,66 @@ claude
 
 ---
 
-#### 2. Give Claude an overview prompt first
+#### 2. Mit `/plan` starten — Übersicht verschaffen
 
-Claude Code has no prior context about this project (the memory files were deleted). Start with:
+`/plan` weist Claude Code an, zuerst einen Erkundungsplan zu erstellen, bevor es Dateien liest. Das verhindert zielloses Durchsuchen.
 
 > **Prompt:**
 > ```
-> Explore this codebase. Read README.md and all markdown files you find. 
-> Then explore the folder structure of backend/ and frontend/. 
-> Give me a summary of: the technology stack, the architecture, how backend and 
-> frontend communicate, and how the data flows from database to UI.
+> /plan Mach dich mit dieser Codebase vertraut. Lies README.md und alle Markdown-Dateien.
+> Erkunde dann die Ordnerstruktur von backend/ und frontend/.
+> Fasse zusammen: den Tech-Stack, die Architektur, wie Backend und Frontend 
+> kommunizieren und wie Daten von der Datenbank bis zur UI fließen.
 > ```
 
 ---
 
-#### 3. Dive into the backend architecture
+#### 3. Backend-Architektur verstehen
 
 > **Prompt:**
 > ```
-> Explain the backend package structure in detail. 
-> What are the three main layers and what is each layer responsible for? 
-> Show me one concrete example of how a single use case (e.g. creating a todo) 
-> flows through all layers — from the REST controller down to the database.
+> Erkläre die Backend-Paketstruktur im Detail.
+> Welche drei Hauptschichten gibt es und wofür ist jede zuständig?
+> Zeige mir ein konkretes Beispiel, wie ein Use Case (z.B. Todo erstellen)
+> durch alle Schichten fließt – vom REST-Controller bis zur Datenbank.
 > ```
 
 ---
 
-#### 4. Understand the frontend structure
+#### 4. Frontend-Struktur verstehen
 
 > **Prompt:**
 > ```
-> Explore the Angular frontend under frontend/src/app/. 
-> Explain the folder structure, how routing works, how the frontend authenticates 
-> with the backend, and how a todo list is loaded and displayed.
+> Erkunde das Angular-Frontend unter frontend/src/app/.
+> Erkläre die Ordnerstruktur, wie das Routing funktioniert, wie sich das Frontend
+> beim Backend authentifiziert und wie eine Todo-Liste geladen und angezeigt wird.
 > ```
 
 ---
 
-#### 5. Understand the data model
+#### 5. Datenmodell verstehen
 
 > **Prompt:**
 > ```
-> Show me the full data model of this application. 
-> What entities exist, what fields do they have, and how are they related? 
-> Also show me how the domain model differs from the JPA entity and the REST response.
+> Zeige mir das vollständige Datenmodell dieser Anwendung.
+> Welche Entitäten gibt es, welche Felder haben sie und wie hängen sie zusammen?
+> Erkläre auch, wie sich das Domain-Modell von der JPA-Entity und der REST-Response unterscheidet.
 > ```
 
 ---
 
-#### 6. Verify your understanding
+#### 6. Verständnis prüfen
 
-After the exploration, test yourself with this prompt:
+Abschluss-Test — wenn Claude das präzise beantwortet, ist das Ziel erreicht:
 
 > **Prompt:**
 > ```
-> If I wanted to add a new optional field "estimatedMinutes" (integer) to a Todo, 
-> list every single file I would need to change, in the correct order, 
-> following the architecture rules of this project. Do not implement it yet.
+> /plan Wenn ich ein neues optionales Feld "estimatedMinutes" (Integer) zu einem Todo
+> hinzufügen wollte: liste alle Dateien auf, die ich ändern müsste, in der richtigen
+> Reihenfolge, gemäß den Architekturregeln dieses Projekts. Implementiere noch nichts.
 > ```
 
-If Claude can answer this precisely, you are ready for the next task.
+Wenn Claude alle Schichten korrekt durchläuft (Domain → Command → Service → JPA Entity → REST → Angular), ist Task 1 abgeschlossen.
 
 ---
 
