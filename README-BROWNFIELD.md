@@ -26,6 +26,35 @@ docker compose up --build
 
 ---
 
+## Chapter 0 — Reset AI Memory (Start Fresh)
+
+Before starting the tasks, reset all AI memory files so Claude Code begins without any prior knowledge of this codebase. This simulates a realistic brownfield scenario where the AI has no context.
+
+**Files to delete:**
+
+| File | Purpose |
+|---|---|
+| `.github/copilot-instructions.md` | Persistent context loaded automatically by GitHub Copilot |
+| `.plan/plan.md` | Technical implementation plan written during development |
+
+**How to delete (PowerShell):**
+
+```powershell
+Remove-Item ".github\copilot-instructions.md" -ErrorAction SilentlyContinue
+Remove-Item ".plan\plan.md" -ErrorAction SilentlyContinue
+```
+
+**How to delete (Bash/macOS/Linux):**
+
+```bash
+rm -f .github/copilot-instructions.md .plan/plan.md
+```
+
+> ⚠️ Do not commit these deletions. The files are intentionally kept in the repository so others can reset them too.  
+> After the tasks, you can restore them with `git restore .github/copilot-instructions.md .plan/plan.md`.
+
+---
+
 ## How to work with Claude Code
 
 Start Claude Code in the project root:
