@@ -1,233 +1,235 @@
-# Copilot Instructions – Todo-App
+# Copilot Instructions - Todo App
 
-Diese Datei gibt GitHub Copilot den vollständigen Projektkontext.
-Sie wird automatisch auf jedem Rechner geladen, auf dem dieses Repository ausgecheckt ist.
-
----
-
-## Projekt-Überblick
-
-**Todo-Webapp Version 1.0** – Multi-User-App zur Verwaltung von Aufgabenlisten.
-
-- Mehrere Nutzer, strikt getrennte Daten (jeder Nutzer sieht nur seine eigenen Listen/Aufgaben)
-- Registrierung, Login, Logout per JWT
-- Todo-Listen mit Aufgaben: erstellen, bearbeiten, löschen, erledigen
-- Filtern und Sortieren von Aufgaben
-- Mobile First (ab 360 px)
+This file provides full project context for GitHub Copilot.  
+It is loaded automatically on any machine where this repository is checked out.
 
 ---
 
-## Technologie-Stack
+## Project Overview
 
-| Schicht | Technologie |
+**Todo Web App Version 1.0** - multi-user app for managing personal todo lists.
+
+- Multiple users with strict data isolation (users can only access their own lists and todos)
+- Register, login, and logout via JWT
+- Todo lists and todos: create, update, delete, complete, reopen
+- Filtering and sorting of todos
+- Mobile-first UI (starting at 360 px)
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
 |---|---|
 | Frontend | Angular 21, Standalone Components, SCSS, Reactive Forms |
 | Backend | Spring Boot 3.5, Java 21 |
-| Backend-Architektur | Hexagonale Architektur (Ports & Adapters) |
-| Authentifizierung | JWT (HS256, 24h), BCrypt (Passwort-Hashing) |
-| Datenbank Produktion | PostgreSQL 16 |
-| Datenbank Tests | H2 In-Memory (Profil: `test`) |
-| DB-Migration | Flyway |
-| Betrieb | Docker + Docker Compose |
-| API-Dokumentation | OpenAPI / Swagger (`/swagger-ui.html`) |
+| Backend Architecture | Hexagonal Architecture (Ports & Adapters) |
+| Authentication | JWT (HS256, 24h), BCrypt |
+| Production DB | PostgreSQL 16 |
+| Test DB | H2 In-Memory (`test` profile) |
+| DB Migration | Flyway |
+| Runtime | Docker + Docker Compose |
+| API Docs | OpenAPI / Swagger (`/swagger-ui.html`) |
 
 ---
 
-## Repository-Struktur
+## Repository Structure
 
 ```
-Projekt K/                        ← Git-Root
-├── .github/
-│   └── copilot-instructions.md  ← Diese Datei
-├── .plan/
-│   └── plan.md                  ← Technischer Umsetzungsplan
-├── backend/                     ← Spring Boot Backend
-│   ├── src/main/java/de/joshuaschnabel/todo/
-│   ├── src/main/resources/
-│   │   ├── application.properties
-│   │   └── db/migration/        ← Flyway-Skripte (V1–V3)
-│   ├── src/test/
-│   ├── Dockerfile
-│   └── pom.xml
-├── frontend/                    ← Angular Frontend
-│   ├── src/app/
-│   │   ├── core/               ← Services, Guards, Interceptors, Models
-│   │   ├── features/           ← auth/, lists/, todos/
-│   │   └── shared/             ← Wiederverwendbare Komponenten
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   ├── proxy.conf.json
-│   └── package.json
-├── docker-compose.yml
-├── .gitignore
-└── README.md
+Projekt K/                        <- Git root
+|- .github/
+|  `- copilot-instructions.md    <- this file
+|- .plan/
+|  `- plan.md                    <- technical implementation plan
+|- backend/                      <- Spring Boot backend
+|  |- src/main/java/de/joshuaschnabel/todo/
+|  |- src/main/resources/
+|  |  |- application.properties
+|  |  `- db/migration/           <- Flyway scripts (V1-V3)
+|  |- src/test/
+|  |- Dockerfile
+|  `- pom.xml
+|- frontend/                     <- Angular frontend
+|  |- src/app/
+|  |  |- core/                   <- services, guards, interceptors, models
+|  |  |- features/               <- auth/, lists/, todos/
+|  |  `- shared/                 <- reusable components
+|  |- Dockerfile
+|  |- nginx.conf
+|  |- proxy.conf.json
+|  `- package.json
+|- docker-compose.yml
+|- .gitignore
+`- README.md
 ```
 
 ---
 
-## Backend Package-Struktur
+## Backend Package Structure
 
-Basis-Package: `de.joshuaschnabel.todo`
+Base package: `de.joshuaschnabel.todo`
 
 ```
 de.joshuaschnabel.todo
-├── domain                       ← Fachkern – KEIN Spring, KEIN JPA
-│   ├── model/                   User, TodoList, Todo
-│   ├── valueobject/             EmailAddress, TodoTitle, TodoListName, TodoStatus, TodoPriority
-│   └── exception/               DomainException, ValidationException
-│
-├── application                  ← Use Cases & Ports
-│   ├── usecase/                 Interfaces (RegisterUserUseCase, CreateTodoUseCase, ...)
-│   ├── port/
-│   │   ├── in/                  (= Use Case Interfaces)
-│   │   └── out/                 LoadUserPort, SaveUserPort, PasswordHashingPort, TokenServicePort, ...
-│   ├── command/                 RegisterUserCommand, CreateTodoCommand, ... (Records)
-│   ├── query/                   GetTodosQuery (Record)
-│   ├── service/                 UserApplicationService, TodoListApplicationService, TodoApplicationService
-│   └── exception/               EmailAlreadyExistsException, ForbiddenException, NotFoundException, InvalidCredentialsException
-│
-└── infrastruktur                ← Framework-Adapter
-    ├── presentation/rest/
-    │   ├── controller/          AuthController, TodoListController, TodoController
-    │   ├── request/             RegisterUserRequest, LoginRequest, CreateTodoRequest, ...
-    │   ├── response/            AuthResponse, TodoListResponse, TodoResponse, UserResponse
-    │   ├── mapper/              TodoListRestMapper, TodoRestMapper
-    │   └── error/               RestExceptionHandler, ErrorResponse
-    ├── persistence/db/
-    │   ├── entity/              UserJpaEntity, TodoListJpaEntity, TodoJpaEntity
-    │   ├── repository/          SpringDataUserRepository, SpringDataTodoListRepository, SpringDataTodoRepository
-    │   ├── adapter/             UserPersistenceAdapter, TodoListPersistenceAdapter, TodoPersistenceAdapter
-    │   └── mapper/              UserPersistenceMapper, TodoListPersistenceMapper, TodoPersistenceMapper
-    ├── security/
-    │   ├── jwt/                 JwtProperties, JwtUtil
-    │   ├── filter/              JwtAuthenticationFilter
-    │   ├── adapter/             JwtTokenServiceAdapter, BCryptPasswordHashingAdapter, CurrentUserProviderAdapter
-    │   └── config/              SecurityConfig
-    └── config/                  OpenApiConfig, CorsConfig, ClockConfig, ApplicationBeanConfig
+|- domain                         <- core domain, no Spring, no JPA
+|  |- model/                      User, TodoList, Todo
+|  |- valueobject/                EmailAddress, TodoTitle, TodoListName, TodoStatus, TodoPriority
+|  `- exception/                  DomainException, ValidationException
+|
+|- application                    <- use cases and ports
+|  |- usecase/                    interfaces (RegisterUserUseCase, CreateTodoUseCase, ...)
+|  |- port/
+|  |  |- in/                      use case interfaces
+|  |  `- out/                     persistence/security ports
+|  |- command/                    RegisterUserCommand, CreateTodoCommand, ...
+|  |- query/                      GetTodosQuery
+|  |- service/                    application service implementations
+|  `- exception/                  EmailAlreadyExistsException, ForbiddenException, ...
+|
+`- infrastruktur                  <- framework adapters
+   |- presentation/rest/
+   |  |- controller/              AuthController, TodoListController, TodoController
+   |  |- request/                 RegisterUserRequest, LoginRequest, CreateTodoRequest, ...
+   |  |- response/                AuthResponse, TodoListResponse, TodoResponse, UserResponse
+   |  |- mapper/                  rest mappers
+   |  `- error/                   RestExceptionHandler, ErrorResponse
+   |- persistence/db/
+   |  |- entity/                  UserJpaEntity, TodoListJpaEntity, TodoJpaEntity
+   |  |- repository/              Spring Data repositories
+   |  |- adapter/                 persistence adapters implementing out-ports
+   |  `- mapper/                  persistence mappers
+   |- security/
+   |  |- jwt/                     JwtProperties
+   |  |- filter/                  JwtAuthenticationFilter
+   |  |- adapter/                 JwtTokenServiceAdapter, BCryptPasswordHashingAdapter, ...
+   |  `- config/                  SecurityConfig
+   `- config/                     OpenApiConfig, ApplicationBeanConfig
 ```
 
-### Architektur-Regeln (verbindlich)
+### Architecture Rules (mandatory)
 
-- Abhängigkeiten zeigen **nur** von außen nach innen: `Infrastruktur → Application → Domain`
-- `Domain` hat **keine** Spring-, JPA- oder REST-Abhängigkeiten
-- `Application` kennt **keine** Controller, JPA-Repositories oder JPA-Entities
-- REST-DTOs (Request/Response) **niemals** in Domain oder Application verwenden
-- JPA-Entities **nur** in `infrastruktur.persistence.db.entity`
-- Persistence Adapter **implementieren** Application Out-Ports
+- Dependencies must only point inward: `infrastruktur -> application -> domain`
+- `domain` must not depend on Spring, JPA, REST, or infrastructure frameworks
+- `application` must not use controllers, JPA repositories, or JPA entities
+- REST DTOs (request/response) are only allowed in `infrastruktur.presentation.rest`
+- JPA entities are only allowed in `infrastruktur.persistence.db.entity`
+- Persistence adapters implement application out-ports
 
 ---
 
-## Frontend-Struktur
+## Frontend Structure
 
 ```
 src/app/
-├── core/
-│   ├── auth/           auth.service.ts
-│   ├── guards/         auth.guard.ts
-│   ├── interceptors/   jwt.interceptor.ts
-│   ├── models/         user.model.ts, todo-list.model.ts, todo.model.ts
-│   └── services/       todo-list.service.ts, todo.service.ts
-├── features/
-│   ├── auth/           login/, register/
-│   ├── lists/          list-overview/, list-form/
-│   └── todos/          todo-list-view/, todo-item/, todo-form/, todo-filter/, todo-sort/
-└── shared/
-    └── components/     empty-state/, loading-spinner/, error-message/
+|- core/
+|  |- auth/           auth.service.ts
+|  |- guards/         auth.guard.ts
+|  |- interceptors/   jwt.interceptor.ts
+|  |- models/         user.model.ts, todo-list.model.ts, todo.model.ts
+|  `- services/       todo-list.service.ts, todo.service.ts
+|- features/
+|  |- auth/           login/, register/
+|  |- lists/          list-overview/, list-form/
+|  `- todos/          todo-list-view/, todo-item/, todo-form/, todo-filter/, todo-sort/
+`- shared/
+   `- components/     empty-state/, loading-spinner/, error-message/
 ```
 
-### Frontend-Regeln
+### Frontend Rules
 
-- Alle Komponenten sind **Standalone Components** (keine NgModules)
-- Formulare verwenden **Reactive Forms** (`ReactiveFormsModule`)
-- JWT wird automatisch via `jwtInterceptor` (HttpInterceptorFn) gesendet
-- `authGuard` schützt alle Routen außer `/login` und `/register`
-- API-Base-URL: `http://localhost:8080` (via `proxy.conf.json` im Dev-Modus)
-- Environments: `src/environments/environment.ts` und `environment.development.ts`
+- Use Standalone Components only (no NgModules)
+- Use Reactive Forms for forms
+- JWT is attached automatically by `jwtInterceptor` (HttpInterceptorFn)
+- `authGuard` protects all routes except `/login` and `/register`
+- API base URL for development: `http://localhost:8080` via `proxy.conf.json`
+- Environments: `src/environments/environment.ts` and `environment.development.ts`
 
 ---
 
-## Datenmodell
+## Data Model
 
-| Entity | Felder |
+| Entity | Fields |
 |---|---|
 | User | id (UUID), email, passwordHash, createdAt, updatedAt |
-| TodoList | id (UUID), ownerId (→ User), name (max 80), createdAt, updatedAt |
-| Todo | id (UUID), listId (→ TodoList), ownerId (→ User), title (max 120), description? (max 1000), status (OPEN/DONE), priority (LOW/MEDIUM/HIGH), dueDate?, createdAt, updatedAt |
+| TodoList | id (UUID), ownerId (-> User), name (max 80), createdAt, updatedAt |
+| Todo | id (UUID), listId (-> TodoList), ownerId (-> User), title (max 120), description? (max 1000), status (OPEN/DONE), priority (LOW/MEDIUM/HIGH), dueDate?, createdAt, updatedAt |
 
 ---
 
-## REST-API
+## REST API
 
-Basis: `/api`
+Base path: `/api`
 
-| Methode | Pfad | Auth | Beschreibung |
+| Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | /auth/register | – | Registrierung |
-| POST | /auth/login | – | Login → JWT |
+| POST | /auth/register | - | Register |
+| POST | /auth/login | - | Login -> JWT |
 | POST | /auth/logout | JWT | Logout |
-| GET | /auth/me | JWT | Eigenes Profil |
-| GET | /lists | JWT | Alle eigenen Listen |
-| POST | /lists | JWT | Liste erstellen |
-| PUT | /lists/{listId} | JWT | Liste umbenennen |
-| DELETE | /lists/{listId} | JWT | Liste löschen |
-| GET | /lists/{listId}/todos | JWT | Aufgaben (+ Filter/Sort) |
-| POST | /lists/{listId}/todos | JWT | Aufgabe erstellen |
-| PUT | /lists/{listId}/todos/{todoId} | JWT | Aufgabe bearbeiten |
-| DELETE | /lists/{listId}/todos/{todoId} | JWT | Aufgabe löschen |
-| PATCH | /lists/{listId}/todos/{todoId}/complete | JWT | Als erledigt markieren |
-| PATCH | /lists/{listId}/todos/{todoId}/reopen | JWT | Wieder öffnen |
+| GET | /auth/me | JWT | Current user profile |
+| GET | /lists | JWT | Get all user lists |
+| POST | /lists | JWT | Create list |
+| PUT | /lists/{listId} | JWT | Rename list |
+| DELETE | /lists/{listId} | JWT | Delete list |
+| GET | /lists/{listId}/todos | JWT | Get todos (+ filter/sort) |
+| POST | /lists/{listId}/todos | JWT | Create todo |
+| PUT | /lists/{listId}/todos/{todoId} | JWT | Update todo |
+| DELETE | /lists/{listId}/todos/{todoId} | JWT | Delete todo |
+| PATCH | /lists/{listId}/todos/{todoId}/complete | JWT | Mark done |
+| PATCH | /lists/{listId}/todos/{todoId}/reopen | JWT | Reopen |
 
-### Filter-Parameter (`GET /lists/{listId}/todos`)
+### Query Parameters (`GET /lists/{listId}/todos`)
+
 ```
 ?status=open|done
 ?due=today|overdue
 ?sort=dueDate,asc|priority,desc|createdAt,desc|status,asc
 ```
 
-### Fehlerformat
+### Error Format
+
 ```json
-{ "code": "VALIDATION_ERROR", "field": "title", "message": "Titel ist erforderlich" }
+{ "code": "VALIDATION_ERROR", "field": "title", "message": "Title is required" }
 ```
 
 ---
 
-## Validierungsregeln
+## Validation Rules
 
-| Feld | Regel | Fehlermeldung |
+| Field | Rule | Error message |
 |---|---|---|
-| Aufgabe Titel | Pflicht | „Titel ist erforderlich" |
-| Aufgabe Titel | max. 120 Zeichen | „Titel darf maximal 120 Zeichen lang sein" |
-| Aufgabe Beschreibung | max. 1000 Zeichen | „Beschreibung darf maximal 1000 Zeichen lang sein" |
-| Listenname | Pflicht | „Listenname ist erforderlich" |
-| Listenname | max. 80 Zeichen | „Listenname darf maximal 80 Zeichen lang sein" |
-| Passwort | min. 8 Zeichen | „Passwort muss mindestens 8 Zeichen lang sein" |
+| Todo title | required | "Title is required" |
+| Todo title | max 120 chars | "Title must be at most 120 characters" |
+| Todo description | max 1000 chars | "Description must be at most 1000 characters" |
+| List name | required | "List name is required" |
+| List name | max 80 chars | "List name must be at most 80 characters" |
+| Password | min 8 chars | "Password must be at least 8 characters" |
 
 ---
 
-## Authentifizierungskonzept
+## Authentication Concept
 
-- **JWT HS256**, Lebensdauer 24h (konfigurierbar via `JWT_EXPIRATION_MS`)
-- Geheimnis via Umgebungsvariable `JWT_SECRET` (nie hardcoden!)
-- Logout ist client-seitig (Token verwerfen) – kein Server-seitiger Blacklist
-- Kein Token-Refresh in V1.0
+- JWT HS256 with 24h lifetime (`JWT_EXPIRATION_MS`)
+- Secret via `JWT_SECRET` environment variable (never hardcode)
+- Logout is client-side token removal (no server blacklist in v1.0)
+- No token refresh in v1.0
 
 ---
 
-## Datenbank & Migration
+## Database and Migration
 
-- **Flyway**-Migrations unter `backend/src/main/resources/db/migration/`:
+- Flyway scripts in `backend/src/main/resources/db/migration/`:
   - `V1__create_users_table.sql`
   - `V2__create_todo_lists_table.sql`
   - `V3__create_todos_table.sql`
-- Produktion: `spring.jpa.hibernate.ddl-auto=validate`
-- Tests: H2 In-Memory mit Profil `test` (`src/test/resources/application-test.properties`)
+- Production: `spring.jpa.hibernate.ddl-auto=validate`
+- Tests: H2 In-Memory with `test` profile (`src/test/resources/application-test.properties`)
 
 ---
 
 ## Docker
 
 ```bash
-# Starten (aus Projekt-Root)
+# Start from repository root
 docker compose up --build
 
 # Ports:
@@ -237,60 +239,62 @@ docker compose up --build
 # DB:       localhost:5432
 ```
 
-Umgebungsvariablen (`.env` Datei im Root):
+Environment variables (`.env` in root):
+
 ```env
 POSTGRES_DB=todo
 POSTGRES_USER=todo
 POSTGRES_PASSWORD=todo
-JWT_SECRET=dein-langes-zufaelliges-geheimnis-min-32-zeichen
+JWT_SECRET=your-long-random-secret-at-least-32-characters
 JWT_EXPIRATION_MS=86400000
 ```
 
 ---
 
-## Tests ausführen
+## Running Tests
 
 ```bash
-# Backend (Java 21 + Maven erforderlich)
+# Backend
 cd backend
 .\mvnw.cmd test "-Dspring.profiles.active=test"
 
-# Backend mit Coverage-Report (→ backend/target/site/jacoco/index.html)
+# Backend coverage report -> backend/target/site/jacoco/index.html
 .\mvnw.cmd verify "-Dspring.profiles.active=test"
 
 # Frontend
 cd frontend
-npm test                  # ohne Coverage
-npm run test:coverage     # mit Coverage (→ frontend/coverage/frontend/index.html)
+npm test
+npm run test:coverage   # -> frontend/coverage/frontend/index.html
 ```
 
 ---
 
-## Bekannte Besonderheiten & Konventionen
+## Project Conventions and Notes
 
-- Das Backend-Package heißt `infrastruktur` (deutsch, mit k) – nicht `infrastructure`
-- Alle Application-Services werden in `ApplicationBeanConfig` als `@Bean` verdrahtet (kein `@Service` in Application-Schicht)
-- Standard-Sortierung Aufgaben: OPEN zuerst → frühestes dueDate → höchste Priorität
-- Bei Registrierung wird automatisch eine Liste „Meine Aufgaben" erstellt
-- `ownerId` steht redundant auch an `Todo` (nicht nur an `TodoList`) für effizienteren Zugriffsschutz
-- Frontend: Angular 21 – Standalone Components, Vitest als Test-Runner (nicht Karma/Jasmine)
-
----
-
-## Offene Punkte Version 1.0
-
-- Kein Token-Refresh (nach 24h erneuter Login)
-- Kein Passwort-zurücksetzen
-- Kein Admin-Bereich
-- `communication`-Package (http/mq) strukturell vorhanden aber leer
+- Backend package uses German spelling: `infrastruktur` (with `k`), not `infrastructure`
+- Application services are wired in `ApplicationBeanConfig` as `@Bean` (no `@Service` in application layer)
+- Default todo sorting: OPEN first -> earliest due date -> highest priority
+- A default list named `"Meine Aufgaben"` is created automatically on user registration
+- `ownerId` is stored redundantly on `Todo` (in addition to `TodoList`) for efficient access control
+- Frontend uses Angular 21 and Vitest (not Karma/Jasmine)
 
 ---
 
-## Weiterentwicklung – Hinweise für Copilot
+## Open Points in Version 1.0
 
-Wenn neue Features ergänzt werden:
-1. Starte immer in `domain/` (Modell/Wertobjekte)
-2. Dann `application/` (UseCase-Interface + Command/Query + Service)
-3. Dann `infrastruktur/` (Persistence Adapter → REST Controller)
-4. Tests: `@SpringBootTest @ActiveProfiles("test")` mit H2
-5. Architektur-Regeln (s.o.) strikt einhalten
+- No token refresh (re-login required after 24h)
+- No password reset
+- No admin panel
+- `communication` package exists as structure only and is currently empty
+
+---
+
+## Copilot Guidance for New Features
+
+When adding features, follow this order:
+
+1. Start in `domain/` (model/value objects/rules)
+2. Continue in `application/` (use case interfaces + command/query + service)
+3. Implement adapters in `infrastruktur/` (persistence + REST)
+4. Add tests using `@SpringBootTest @ActiveProfiles("test")` and H2
+5. Keep architecture rules strict

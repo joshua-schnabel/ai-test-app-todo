@@ -1,25 +1,24 @@
-# Todo-App
+# Todo App
 
-Eine Multi-User-Todo-Webapp mit Angular-Frontend und Spring Boot-Backend.
+A multi-user Todo web app with an Angular frontend and a Spring Boot backend.
 
-## Technologie-Stack
+## Technology Stack
 
-| Komponente | Technologie |
+| Component | Technology |
 |---|---|
-| Frontend | Angular 19, SCSS, Reactive Forms |
-| Backend | Spring Boot 3.5, Java 21, Hexagonale Architektur |
-| Datenbank (Prod) | PostgreSQL 16 |
-| Datenbank (Test) | H2 In-Memory |
+| Frontend | Angular 21, SCSS, Reactive Forms |
+| Backend | Spring Boot 3.5, Java 21, Hexagonal Architecture |
+| Database (Prod) | PostgreSQL 16 |
+| Database (Test) | H2 In-Memory |
 | Migration | Flyway |
-| Authentifizierung | JWT (HS256) + BCrypt |
-| Betrieb | Docker + Docker Compose |
+| Authentication | JWT (HS256) + BCrypt |
+| Runtime | Docker + Docker Compose |
 
 ---
 
-## Lokale Ausführung mit Docker Compose
+## Run Locally with Docker Compose
 
 ```bash
-cd todo-app
 docker compose up --build
 ```
 
@@ -30,19 +29,19 @@ docker compose up --build
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | PostgreSQL | localhost:5432 |
 
-### Umgebungsvariablen (optional, `.env` Datei)
+### Environment Variables (optional `.env` file)
 
 ```env
 POSTGRES_DB=todo
 POSTGRES_USER=todo
 POSTGRES_PASSWORD=todo
-JWT_SECRET=dein-langes-zufaelliges-secret
+JWT_SECRET=your-long-random-secret
 JWT_EXPIRATION_MS=86400000
 ```
 
 ---
 
-## Lokale Entwicklung ohne Docker
+## Local Development Without Docker
 
 ### Backend
 
@@ -51,7 +50,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Voraussetzungen: Java 21, PostgreSQL läuft lokal (oder H2 mit Profil `test`)
+Requirements: Java 21, local PostgreSQL (or H2 with profile `test`).
 
 ### Frontend
 
@@ -61,94 +60,94 @@ npm install
 npm start
 ```
 
-Voraussetzungen: Node.js 20+
+Requirements: Node.js 20+.
 
 ---
 
-## Profile und Datenbanken
+## Profiles and Databases
 
-| Profil | Datenbank | Zweck |
+| Profile | Database | Purpose |
 |---|---|---|
-| `default` | PostgreSQL | Produktion / lokale Entwicklung |
-| `test` | H2 (In-Memory) | Automatisierte Tests |
+| `default` | PostgreSQL | Production / local development |
+| `test` | H2 (In-Memory) | Automated tests |
 
 ---
 
-## Wichtigste API-Endpunkte
+## Main API Endpoints
 
 ```
-POST /api/auth/register   – Registrierung
-POST /api/auth/login      – Login → JWT
-POST /api/auth/logout     – Logout
-GET  /api/auth/me         – Eigenes Profil
+POST /api/auth/register   - Register
+POST /api/auth/login      - Login -> JWT
+POST /api/auth/logout     - Logout
+GET  /api/auth/me         - Current user profile
 
-GET    /api/lists                              – Alle eigenen Listen
-POST   /api/lists                              – Liste erstellen
-PUT    /api/lists/{listId}                     – Liste umbenennen
-DELETE /api/lists/{listId}                     – Liste löschen
+GET    /api/lists                              - All lists for current user
+POST   /api/lists                              - Create list
+PUT    /api/lists/{listId}                     - Rename list
+DELETE /api/lists/{listId}                     - Delete list
 
-GET    /api/lists/{listId}/todos               – Aufgaben (Filter/Sort)
-POST   /api/lists/{listId}/todos               – Aufgabe erstellen
-PUT    /api/lists/{listId}/todos/{todoId}      – Aufgabe bearbeiten
-DELETE /api/lists/{listId}/todos/{todoId}      – Aufgabe löschen
-PATCH  /api/lists/{listId}/todos/{todoId}/complete  – Als erledigt markieren
-PATCH  /api/lists/{listId}/todos/{todoId}/reopen    – Wieder öffnen
+GET    /api/lists/{listId}/todos               - Get todos (filter/sort)
+POST   /api/lists/{listId}/todos               - Create todo
+PUT    /api/lists/{listId}/todos/{todoId}      - Update todo
+DELETE /api/lists/{listId}/todos/{todoId}      - Delete todo
+PATCH  /api/lists/{listId}/todos/{todoId}/complete  - Mark as done
+PATCH  /api/lists/{listId}/todos/{todoId}/reopen    - Reopen todo
 ```
 
 ---
 
-## Tests ausführen
+## Running Tests
 
 ```bash
-# Backend-Tests
+# Backend tests
 cd backend
 ./mvnw test
 
-# Frontend-Tests
+# Frontend tests
 cd frontend
 npm test
 ```
 
 ---
 
-## Projektstruktur
+## Project Structure
 
 ```
-todo-app/
-├── backend/          Spring Boot Backend
-├── frontend/         Angular Frontend
-├── docker-compose.yml
-└── README.md
+Projekt K/
+|- backend/          Spring Boot backend
+|- frontend/         Angular frontend
+|- docker-compose.yml
+|- README.md
+`- .plan/plan.md
 ```
 
-### Backend Package-Struktur
+### Backend Package Structure
 
 ```
 de.joshuaschnabel.todo
-├── domain            Fachmodell (kein Spring, kein JPA)
-│   ├── model
-│   ├── valueobject
-│   ├── service
-│   └── exception
-├── application       Use Cases & Ports
-│   ├── usecase
-│   ├── port/in|out
-│   ├── command
-│   ├── query
-│   └── service
-└── infrastruktur     Framework-Adapter
-    ├── presentation/rest
-    ├── persistence/db
-    ├── security
-    └── config
+|- domain            Core domain model (no Spring, no JPA)
+|  |- model
+|  |- valueobject
+|  `- exception
+|- application       Use cases and ports
+|  |- usecase
+|  |- port/in|out
+|  |- command
+|  |- query
+|  `- service
+`- infrastruktur     Framework adapters
+   |- presentation/rest
+   |- persistence/db
+   |- security
+   `- config
 ```
 
 ---
 
-## Bekannte Einschränkungen Version 1.0
+## Known Limitations (Version 1.0)
 
-- Kein Token-Refresh (nach 24h erneuter Login erforderlich)
-- Keine gemeinsamen Listen oder Zusammenarbeit zwischen Nutzern
-- Kein Passwort-zurücksetzen
-- Keine E-Mail-Verifikation
-- Kein Admin-Bereich
+- No token refresh (user must log in again after 24h)
+- No shared lists or collaboration between users
+- No password reset
+- No email verification
+- No admin panel
