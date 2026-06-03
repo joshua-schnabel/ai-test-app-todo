@@ -270,21 +270,44 @@ Implementiere das Tag-Feature im Angular-Frontend:
 
 ---
 
-**Tests (EN):**
+**Tests & coverage (EN):**
 ```
-Run all backend tests and fix any failures:
-cd backend && ./mvnw test -Dspring.profiles.active=test
+Write integration tests for the new tag functionality:
+- Create a todo and assign tags — verify the tags appear in the response
+- Delete the last todo with a specific tag — verify the tag is automatically removed
+- Verify that tags from one user do not appear for another user
 
-Then run all frontend tests and fix any failures:
+Then run the full test suite and verify coverage hasn't decreased:
+cd backend && ./mvnw verify -Dspring.profiles.active=test
 cd frontend && npm test
 ```
-**Tests (DE):**
+**Tests & Coverage (DE):**
 ```
-Führe alle Backend-Tests aus und behebe Fehler:
-cd backend && ./mvnw test -Dspring.profiles.active=test
+Schreibe Integrationstests für das Tag-Feature:
+- Todo mit Tags erstellen – prüfen, dass Tags in der Antwort erscheinen
+- Letztes Todo mit einem bestimmten Tag löschen – prüfen, dass der Tag automatisch entfernt wird
+- Prüfen, dass Tags eines Nutzers nicht für andere Nutzer sichtbar sind
 
-Dann alle Frontend-Tests ausführen und Fehler beheben:
+Danach das gesamte Test-Suite ausführen und sicherstellen, dass die Coverage nicht sinkt:
+cd backend && ./mvnw verify -Dspring.profiles.active=test
 cd frontend && npm test
+```
+
+---
+
+**Documentation (EN):**
+```
+Add JavaDoc to all new backend classes you created (domain model, use case interfaces,
+service methods, persistence adapter). Focus on non-obvious behavior:
+why tags are user-scoped, when auto-deletion is triggered, what the color contract is.
+Add JSDoc to the new TagService and any public methods in the Angular frontend.
+```
+**Documentation (DE):**
+```
+Füge JavaDoc zu allen neuen Backend-Klassen hinzu (Domain-Modell, Use-Case-Interfaces,
+Service-Methoden, Persistence-Adapter). Fokus auf nicht-offensichtliches Verhalten:
+warum Tags nutzer-scoped sind, wann Auto-Löschung ausgelöst wird, was der Farbvertrag ist.
+Füge JSDoc zu TagService und allen öffentlichen Methoden im Angular-Frontend hinzu.
 ```
 
 </details>
@@ -300,7 +323,9 @@ cd frontend && npm test
 - [ ] Todos can be filtered by tag in the UI
 - [ ] Tags appear as colored chips/badges on todo items
 - [ ] Tag color is randomly assigned when a new tag is created
-- [ ] Backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
+- [ ] At least one integration test covers tag creation, filtering, and auto-deletion
+- [ ] All new backend classes have JavaDoc; new Angular service methods have JSDoc
+- [ ] Backend coverage report does not decrease: `cd backend && ./mvnw verify -Dspring.profiles.active=test`
 - [ ] Frontend tests pass: `cd frontend && npm test`
 
 ---
@@ -386,6 +411,7 @@ Führe dann den Test erneut aus und bestätige, dass er jetzt besteht.
 - [ ] The vulnerable endpoint is identified (hint: it's a write operation on todos)
 - [ ] A test exists that proves the exploit attempt returns `403 Forbidden`
 - [ ] The fix adds the missing ownership check in the correct layer (application service, not controller)
+- [ ] The authorization helper method has JavaDoc explaining what it checks and what exception it throws
 - [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
 
 ---
@@ -472,6 +498,33 @@ zurückgeben (Comparator<Todo>). Platziere es in der Application- oder Domain-Sc
 Tests danach ausführen.
 ```
 
+---
+
+**Unit tests (EN):**
+```
+Write unit tests for TodoSortCriteria.toComparator():
+- Test that OPEN todos sort before DONE todos
+- Test that earlier due dates sort first
+- Test that HIGH priority sorts before MEDIUM and LOW
+- Test null due dates are placed at the end
+
+Add JavaDoc to TodoCommandService, TodoQueryService, and TodoSortCriteria
+explaining the responsibility of each class.
+Run all tests: cd backend && ./mvnw test -Dspring.profiles.active=test
+```
+**Unit tests (DE):**
+```
+Schreibe Unit-Tests für TodoSortCriteria.toComparator():
+- OPEN-Todos kommen vor DONE-Todos
+- Früheres Fälligkeitsdatum kommt zuerst
+- HIGH-Priorität kommt vor MEDIUM und LOW
+- null-Fälligkeitsdaten werden ans Ende sortiert
+
+Füge JavaDoc zu TodoCommandService, TodoQueryService und TodoSortCriteria hinzu,
+das die Verantwortung jeder Klasse erklärt.
+Tests ausführen: cd backend && ./mvnw test -Dspring.profiles.active=test
+```
+
 </details>
 
 ---
@@ -480,7 +533,9 @@ Tests danach ausführen.
 
 - [ ] `TodoApplicationService` no longer exists — replaced by `TodoCommandService` and `TodoQueryService`
 - [ ] `TodoSortCriteria` is a dedicated class with a `toComparator()` method
+- [ ] `TodoSortCriteria` has unit tests covering all sort dimensions (status, due date, priority, null dates)
 - [ ] `ApplicationBeanConfig` wires both new service beans correctly
+- [ ] `TodoCommandService`, `TodoQueryService`, and `TodoSortCriteria` have JavaDoc on class level
 - [ ] No business logic has changed — only structure
 - [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
 
@@ -568,6 +623,30 @@ Frontend-Tests ausführen und Fehler beheben:
 cd frontend && npm test
 ```
 
+---
+
+**Unit tests & documentation (EN):**
+```
+Write unit tests for TodoStateService:
+- Test that loadTodos() sets isLoading to true then false
+- Test that applyFilter() updates todos$ correctly
+- Test that deleteTodo() removes the todo from the local state optimistically or after response
+
+Add JSDoc to all public methods of TodoStateService explaining inputs, outputs,
+and side effects (e.g. "triggers HTTP call, updates todos$ and isLoading$").
+```
+**Unit tests & Documentation (DE):**
+```
+Schreibe Unit-Tests für TodoStateService:
+- loadTodos() setzt isLoading auf true, dann false
+- applyFilter() aktualisiert todos$ korrekt
+- deleteTodo() entfernt das Todo aus dem lokalen State (optimistisch oder nach Response)
+
+Füge JSDoc zu allen öffentlichen Methoden von TodoStateService hinzu,
+die Inputs, Outputs und Seiteneffekte beschreiben
+(z.B. "löst HTTP-Call aus, aktualisiert todos$ und isLoading$").
+```
+
 </details>
 
 ---
@@ -577,6 +656,8 @@ cd frontend && npm test
 - [ ] `TodoStateService` exists and owns all non-UI state
 - [ ] `TodoListViewComponent` contains no direct calls to `TodoService` for todos (only via `TodoStateService`)
 - [ ] State is exposed via observables or signals — no direct property mutation from outside the service
+- [ ] `TodoStateService` has unit tests covering loading state, filter application, and delete behavior
+- [ ] All public methods of `TodoStateService` have JSDoc
 - [ ] All frontend tests pass: `cd frontend && npm test`
 
 ---
@@ -734,5 +815,7 @@ Tests ausführen: cd backend && ./mvnw test -Dspring.profiles.active=test
 - [ ] Non-members cannot read or write the list → `403`
 - [ ] Only the owner can rename or delete the list → `403` for members
 - [ ] Shared lists are visually distinguishable in the UI
-- [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
+- [ ] All new application and domain classes have JavaDoc; new Angular services have JSDoc
+- [ ] Integration tests cover all role combinations (OWNER / EDITOR / VIEWER / non-member) for at least one write operation
+- [ ] All backend tests pass: `cd backend && ./mvnw verify -Dspring.profiles.active=test`
 - [ ] All frontend tests pass: `cd frontend && npm test`
