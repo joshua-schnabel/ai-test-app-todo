@@ -36,22 +36,24 @@ Before starting the tasks, reset all AI memory files so Claude Code begins witho
 |---|---|
 | `.github/copilot-instructions.md` | Persistent context loaded automatically by GitHub Copilot |
 | `.plan/plan.md` | Technical implementation plan written during development |
+| `README-BROWNFIELD.md` | This file — contains task descriptions and hint prompts |
 
 **How to delete (PowerShell):**
 
 ```powershell
 Remove-Item ".github\copilot-instructions.md" -ErrorAction SilentlyContinue
 Remove-Item ".plan\plan.md" -ErrorAction SilentlyContinue
+Remove-Item "README-BROWNFIELD.md" -ErrorAction SilentlyContinue
 ```
 
 **How to delete (Bash/macOS/Linux):**
 
 ```bash
-rm -f .github/copilot-instructions.md .plan/plan.md
+rm -f .github/copilot-instructions.md .plan/plan.md README-BROWNFIELD.md
 ```
 
 > ⚠️ Do not commit these deletions. The files are intentionally kept in the repository so others can reset them too.  
-> After the tasks, you can restore them with `git restore .github/copilot-instructions.md .plan/plan.md`.
+> After the tasks, you can restore them with `git restore .github/copilot-instructions.md .plan/plan.md README-BROWNFIELD.md`.
 
 ---
 
