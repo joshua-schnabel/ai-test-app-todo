@@ -578,3 +578,161 @@ cd frontend && npm test
 - [ ] `TodoListViewComponent` contains no direct calls to `TodoService` for todos (only via `TodoStateService`)
 - [ ] State is exposed via observables or signals — no direct property mutation from outside the service
 - [ ] All frontend tests pass: `cd frontend && npm test`
+
+---
+
+## ⭐ Bonus Task 6 — Shared Lists with Permissions
+
+**Your goal:** Extend the application to allow users to share their todo lists with other users, with configurable access levels.
+
+This is an open-ended architectural challenge. There is no single correct solution — the goal is to design and implement a sound, maintainable feature that integrates cleanly with the existing hexagonal architecture.
+
+**What the feature should do:**
+
+- A list owner can invite another user by email address to access their list
+- Two permission levels exist: `VIEWER` (read-only) and `EDITOR` (can create, edit, delete, complete todos)
+- Shared lists appear in the invited user's list view, visually distinct from their own lists
+- The owner can revoke access at any time
+- A user can only see and access lists they own or have been explicitly invited to
+- The owner remains the only one who can rename or delete the list
+
+**Key design questions Claude should address before implementing:**
+- Where does the `list_members` table belong in the hexagonal model?
+- How does the authorization logic change? The current `requireOwnedList` check must evolve to `requireListAccess(userId, listId, requiredRole)`
+- How does `GET /lists` return both owned and shared lists?
+- How is the invited user looked up — does the backend expose a user search endpoint, or does the frontend send an email directly?
+
+**How to approach it:** This task requires more upfront design than the previous ones. Start with `/plan` and have Claude propose the full data model, API design, and authorization strategy before writing a single line of code. Review the plan carefully — shared data is where most multi-user bugs live.
+
+**Done when:** All acceptance criteria are met, authorization is airtight (Viewer cannot write, non-members cannot access), and all tests pass.
+
+---
+
+<details>
+<summary>💡 Hints — stuck? Expand for example prompts</summary>
+
+**Design (EN):**
+```
+/plan Design the "shared lists" feature for this Todo app.
+Requirements:
+- List owner can share a list with another user by email (VIEWER or EDITOR role)
+- Shared lists appear in the invited user's list view
+- VIEWER can only read todos; EDITOR can create/edit/delete/complete todos
+- Owner can revoke access; only owner can rename or delete the list
+
+Propose: the database schema (new tables/columns), all new REST endpoints,
+how the authorization logic changes in the application layer,
+and how GET /lists changes to include shared lists.
+Do not implement yet.
+```
+**Design (DE):**
+```
+/plan Entwirf das "Geteilte Listen"-Feature für diese Todo-App.
+Anforderungen:
+- Listenbesitzer kann eine Liste per E-Mail mit einem anderen Nutzer teilen (VIEWER oder EDITOR)
+- Geteilte Listen erscheinen in der Listenansicht des eingeladenen Nutzers
+- VIEWER kann nur lesen; EDITOR kann Todos erstellen/bearbeiten/löschen/erledigen
+- Besitzer kann Zugriff entziehen; nur Besitzer kann Liste umbenennen oder löschen
+
+Schlage vor: Datenbankschema (neue Tabellen/Spalten), alle neuen REST-Endpunkte,
+wie sich die Autorisierungslogik in der Application-Schicht ändert
+und wie GET /lists auch geteilte Listen zurückgibt.
+Noch nichts implementieren.
+```
+
+---
+
+**Database migration (EN):**
+```
+Implement Flyway migration V5 (or next version) for the shared lists feature.
+Add a list_members table: list_id (FK), user_id (FK), role (VIEWER/EDITOR), invited_at.
+The owner is NOT stored here — ownership stays on the lists table.
+```
+**Database migration (DE):**
+```
+Implementiere Flyway-Migration V5 (oder nächste Version) für das Geteilte-Listen-Feature.
+Füge eine Tabelle list_members hinzu: list_id (FK), user_id (FK), role (VIEWER/EDITOR), invited_at.
+Der Besitzer wird NICHT hier gespeichert – Eigentumsrecht bleibt in der lists-Tabelle.
+```
+
+---
+
+**Backend authorization (EN):**
+```
+Refactor the authorization logic in the application layer.
+Replace requireOwnedList() with two new checks:
+- requireListAccess(userId, listId, Role.VIEWER) — for read operations
+- requireListAccess(userId, listId, Role.EDITOR) — for write operations on todos
+- requireListOwnership(userId, listId) — for rename and delete list operations
+
+Add new use cases: ShareListUseCase, RevokeListAccessUseCase, GetListMembersUseCase.
+```
+**Backend authorization (DE):**
+```
+Refactore die Autorisierungslogik in der Application-Schicht.
+Ersetze requireOwnedList() durch zwei neue Prüfungen:
+- requireListAccess(userId, listId, Role.VIEWER) – für Leseoperationen
+- requireListAccess(userId, listId, Role.EDITOR) – für Schreiboperationen auf Todos
+- requireListOwnership(userId, listId) – für Liste umbenennen und löschen
+
+Füge neue Use Cases hinzu: ShareListUseCase, RevokeListAccessUseCase, GetListMembersUseCase.
+```
+
+---
+
+**Frontend (EN):**
+```
+Implement the frontend for shared lists:
+- Extend GET /lists response to include a 'role' field (OWNER / EDITOR / VIEWER)
+- Show shared lists with a visual indicator (e.g. a small icon or different border color)
+- Add a share button on each owned list card that opens a form: enter email + select role
+- Show current members of a list and allow the owner to revoke access
+- Hide edit/delete todo buttons for VIEWER role
+```
+**Frontend (DE):**
+```
+Implementiere das Frontend für geteilte Listen:
+- GET /lists Response um ein 'role'-Feld erweitern (OWNER / EDITOR / VIEWER)
+- Geteilte Listen mit einem visuellen Hinweis anzeigen (z.B. Icon oder andere Randfarbe)
+- Share-Button auf eigenen Listenkarten: Formular mit E-Mail-Eingabe + Rollenauswahl
+- Aktuelle Mitglieder einer Liste anzeigen, Besitzer kann Zugriff entziehen
+- Bearbeiten/Löschen-Buttons für VIEWER-Rolle ausblenden
+```
+
+---
+
+**Security test (EN):**
+```
+Write integration tests that verify:
+1. A VIEWER cannot create, update, delete, or complete todos → 403
+2. A non-member cannot access the list at all → 403
+3. An EDITOR can create and complete todos but cannot rename or delete the list → 403
+4. The owner can do everything
+Run all tests: cd backend && ./mvnw test -Dspring.profiles.active=test
+```
+**Security test (DE):**
+```
+Schreibe Integrationstests, die prüfen:
+1. Ein VIEWER kann Todos nicht erstellen, bearbeiten, löschen oder erledigen → 403
+2. Ein Nicht-Mitglied hat gar keinen Zugriff auf die Liste → 403
+3. Ein EDITOR kann Todos erstellen und erledigen, aber die Liste nicht umbenennen/löschen → 403
+4. Der Besitzer darf alles
+Tests ausführen: cd backend && ./mvnw test -Dspring.profiles.active=test
+```
+
+</details>
+
+---
+
+### Acceptance Criteria
+
+- [ ] A `list_members` table exists (Flyway migration)
+- [ ] `GET /lists` returns both owned and shared lists, each with a `role` field
+- [ ] `POST /lists/{listId}/members` allows the owner to share a list by email + role
+- [ ] `DELETE /lists/{listId}/members/{userId}` allows the owner to revoke access
+- [ ] VIEWER cannot write (create/update/delete/complete/reopen todos) → `403`
+- [ ] Non-members cannot read or write the list → `403`
+- [ ] Only the owner can rename or delete the list → `403` for members
+- [ ] Shared lists are visually distinguishable in the UI
+- [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
+- [ ] All frontend tests pass: `cd frontend && npm test`
