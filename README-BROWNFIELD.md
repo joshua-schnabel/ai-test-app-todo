@@ -387,3 +387,194 @@ Führe dann den Test erneut aus und bestätige, dass er jetzt besteht.
 - [ ] A test exists that proves the exploit attempt returns `403 Forbidden`
 - [ ] The fix adds the missing ownership check in the correct layer (application service, not controller)
 - [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
+
+---
+
+## Task 4 — Refactor the Backend: CQRS Split + Sort Value Object
+
+**Your goal:** Improve the structure of `TodoApplicationService` through two targeted refactorings, without changing any behavior.
+
+**What needs to change:**
+
+1. **CQRS split:** `TodoApplicationService` currently implements 6 use case interfaces and mixes read and write operations in a single class. Split it into:
+   - `TodoCommandService` — handles write operations: create, update, delete, complete, reopen
+   - `TodoQueryService` — handles read operations: getTodos (including filter and sort logic)
+
+2. **Sort value object:** The `resolveComparator` method in the current service takes raw `String sortBy, String sortDir` parameters and contains complex, hard-to-follow branching logic. Extract this into a `TodoSortCriteria` value object in the domain or application layer that encapsulates the parsing and exposes a `toComparator()` method.
+
+**How to approach it:** Start with a plan — Claude should map out exactly which classes will be created, which interfaces move where, and how `ApplicationBeanConfig` needs to change. The refactoring must be purely structural: no business logic changes. All existing tests must still pass after each step.
+
+Do one refactoring at a time. Get the tests green between steps.
+
+**Done when:** The code is split as described, the sort logic is encapsulated in a value object, and all tests pass.
+
+---
+
+<details>
+<summary>💡 Hints — stuck? Expand for example prompts</summary>
+
+**Plan (EN):**
+```
+/plan Refactor TodoApplicationService into two classes:
+- TodoCommandService: create, update, delete, complete, reopen
+- TodoQueryService: getTodos with filter and sort logic
+
+Also extract the sort logic into a TodoSortCriteria value object
+that takes sortBy and sortDir strings and exposes a toComparator() method.
+
+Map out every file that needs to change, including ApplicationBeanConfig
+where the beans are wired. Do not implement yet.
+```
+**Plan (DE):**
+```
+/plan Refactore TodoApplicationService in zwei Klassen:
+- TodoCommandService: create, update, delete, complete, reopen
+- TodoQueryService: getTodos mit Filter- und Sortierlogik
+
+Extrahiere außerdem die Sortierlogik in ein TodoSortCriteria-Value-Object,
+das sortBy- und sortDir-Strings entgegennimmt und eine toComparator()-Methode anbietet.
+
+Liste alle Dateien auf, die geändert werden müssen, inkl. ApplicationBeanConfig.
+Noch nichts implementieren.
+```
+
+---
+
+**CQRS split (EN):**
+```
+Implement the CQRS split: create TodoCommandService and TodoQueryService.
+Move the use case interfaces accordingly. Update ApplicationBeanConfig to wire both beans.
+Keep TodoSortCriteria for the next step — leave sort logic in place for now.
+Run the tests after this step: cd backend && ./mvnw test -Dspring.profiles.active=test
+```
+**CQRS split (DE):**
+```
+Implementiere den CQRS-Split: Erstelle TodoCommandService und TodoQueryService.
+Verschiebe die Use-Case-Interfaces entsprechend. Aktualisiere ApplicationBeanConfig.
+TodoSortCriteria kommt im nächsten Schritt – Sortierlogik vorerst stehen lassen.
+Tests nach diesem Schritt ausführen: cd backend && ./mvnw test -Dspring.profiles.active=test
+```
+
+---
+
+**Sort value object (EN):**
+```
+Extract the sort logic from TodoQueryService into a TodoSortCriteria value object.
+It should accept sortBy and sortDir as constructor parameters and expose a toComparator() method
+returning a Comparator<Todo>. Place it in the application or domain layer.
+Run the tests again after this step.
+```
+**Sort value object (DE):**
+```
+Extrahiere die Sortierlogik aus TodoQueryService in ein TodoSortCriteria-Value-Object.
+Es soll sortBy und sortDir als Konstruktorparameter entgegennehmen und eine toComparator()-Methode
+zurückgeben (Comparator<Todo>). Platziere es in der Application- oder Domain-Schicht.
+Tests danach ausführen.
+```
+
+</details>
+
+---
+
+### Acceptance Criteria
+
+- [ ] `TodoApplicationService` no longer exists — replaced by `TodoCommandService` and `TodoQueryService`
+- [ ] `TodoSortCriteria` is a dedicated class with a `toComparator()` method
+- [ ] `ApplicationBeanConfig` wires both new service beans correctly
+- [ ] No business logic has changed — only structure
+- [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
+
+---
+
+## Task 5 — Refactor the Frontend: Extract Todo State Service
+
+**Your goal:** `TodoListViewComponent` currently manages too many responsibilities at once — HTTP calls, loading state, saving state, filter state, sort state, and UI logic all live in one component class. Extract the non-UI state into a dedicated Angular service.
+
+**What needs to change:**
+
+Create a `TodoStateService` that owns:
+- The list of todos
+- Loading and saving state (`isLoading`, `isSaving`)
+- Current filter and sort criteria
+- All HTTP interactions (delegating to `TodoService`)
+- The `loadTodos()`, `saveTodo()`, `deleteTodo()`, `toggleTodo()` methods
+
+`TodoListViewComponent` should become a thin UI component that:
+- Injects `TodoStateService`
+- Reacts to state changes via observables or signals
+- Only handles UI decisions (show/hide form, confirm dialogs)
+
+**How to approach it:** Start with a plan. The service should be `providedIn: 'root'` or scoped to the route — Claude should propose and justify the choice. The component must still work correctly after the refactoring, including the `ChangeDetectorRef.markForCheck()` calls where necessary.
+
+**Done when:** `TodoListViewComponent` contains no direct HTTP logic, state is owned by `TodoStateService`, and all frontend tests pass.
+
+---
+
+<details>
+<summary>💡 Hints — stuck? Expand for example prompts</summary>
+
+**Plan (EN):**
+```
+/plan Refactor TodoListViewComponent in the Angular frontend.
+The component currently handles HTTP, loading state, saving state, filter, and sort.
+Extract all non-UI state and logic into a new TodoStateService.
+The component should only handle UI decisions.
+Map out exactly which properties and methods move to the service,
+how the component will react to state changes, and whether the service
+should be providedIn 'root' or scoped to the route. Do not implement yet.
+```
+**Plan (DE):**
+```
+/plan Refactore TodoListViewComponent im Angular-Frontend.
+Die Komponente verwaltet aktuell HTTP, Loading-State, Saving-State, Filter und Sortierung.
+Extrahiere den gesamten Nicht-UI-State in einen neuen TodoStateService.
+Die Komponente soll nur noch UI-Entscheidungen treffen.
+Liste genau auf, welche Properties und Methoden in den Service wandern,
+wie die Komponente auf State-Änderungen reagiert und ob der Service
+in 'root' oder route-scoped bereitgestellt werden soll. Noch nicht implementieren.
+```
+
+---
+
+**Implementation (EN):**
+```
+Implement the TodoStateService refactoring.
+Create the service with RxJS BehaviorSubjects or Angular signals for todos,
+isLoading, isSaving, currentFilter, and currentSort.
+Move all HTTP logic from TodoListViewComponent into the service.
+Update the component to subscribe to the service's state.
+Preserve the ChangeDetectorRef.markForCheck() calls where still needed.
+```
+**Implementation (DE):**
+```
+Implementiere das TodoStateService-Refactoring.
+Erstelle den Service mit RxJS BehaviorSubjects oder Angular Signals für todos,
+isLoading, isSaving, currentFilter und currentSort.
+Verschiebe die gesamte HTTP-Logik aus TodoListViewComponent in den Service.
+Aktualisiere die Komponente so, dass sie den State des Service abonniert.
+Behalte ChangeDetectorRef.markForCheck()-Aufrufe wo nötig.
+```
+
+---
+
+**Tests (EN):**
+```
+Run the frontend tests and fix any failures:
+cd frontend && npm test
+```
+**Tests (DE):**
+```
+Frontend-Tests ausführen und Fehler beheben:
+cd frontend && npm test
+```
+
+</details>
+
+---
+
+### Acceptance Criteria
+
+- [ ] `TodoStateService` exists and owns all non-UI state
+- [ ] `TodoListViewComponent` contains no direct calls to `TodoService` for todos (only via `TodoStateService`)
+- [ ] State is exposed via observables or signals — no direct property mutation from outside the service
+- [ ] All frontend tests pass: `cd frontend && npm test`
