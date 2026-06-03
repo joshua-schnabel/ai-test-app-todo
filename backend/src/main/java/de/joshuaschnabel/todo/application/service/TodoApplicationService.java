@@ -71,7 +71,6 @@ public class TodoApplicationService implements CreateTodoUseCase, UpdateTodoUseC
     @Override
     @Transactional
     public Todo updateTodo(UpdateTodoCommand cmd) {
-        requireOwnedList(cmd.ownerId(), cmd.listId());
         Todo todo = requireTodo(cmd.todoId(), cmd.listId());
         todo.update(
                 new TodoTitle(cmd.title()),

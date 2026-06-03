@@ -302,3 +302,88 @@ cd frontend && npm test
 - [ ] Tag color is randomly assigned when a new tag is created
 - [ ] Backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
 - [ ] Frontend tests pass: `cd frontend && npm test`
+
+---
+
+## Task 3 — Find and Fix a Security Vulnerability
+
+**Your goal:** Identify and fix a security vulnerability that has been deliberately introduced into the codebase.
+
+The application has a bug where an authenticated user can **modify another user's data** without being the owner. This is a real-world class of vulnerability known as **IDOR — Insecure Direct Object Reference**.
+
+You don't know which endpoint is affected or where in the code the check is missing. Your job is to find it.
+
+**How to approach it:** Use Claude Code to conduct a security review of the backend. Think about what an attacker could do: they are authenticated, they know (or can guess) UUIDs, and they want to tamper with another user's data. Ask Claude to review the authorization logic — not just whether endpoints require a JWT, but whether each operation verifies that the current user actually *owns* the resource being modified.
+
+Once you've found the vulnerability, fix it properly and verify with a test that the exploit no longer works.
+
+**Done when:** The vulnerability is fixed, the fix is covered by a test, and all existing tests still pass.
+
+---
+
+<details>
+<summary>💡 Hints — stuck? Expand for example prompts</summary>
+
+**Security review (EN):**
+```
+/plan Conduct a security review of the backend authorization logic.
+For every write operation (create, update, delete, complete, reopen) on todos and lists,
+check whether the application correctly verifies that the current user owns the resource.
+Look for any operation where the ownership check might be missing or incomplete.
+Do not fix anything yet — just report your findings.
+```
+**Security review (DE):**
+```
+/plan Führe ein Security-Review der Backend-Autorisierungslogik durch.
+Prüfe für jede Schreiboperation (create, update, delete, complete, reopen) auf Todos und Listen,
+ob die Anwendung korrekt sicherstellt, dass der aktuelle Nutzer die Ressource besitzt.
+Suche nach Operationen, bei denen der Ownership-Check fehlt oder unvollständig ist.
+Noch nichts fixen – nur Befunde melden.
+```
+
+---
+
+**Exploit test (EN):**
+```
+Write a Spring Boot integration test that proves the vulnerability exists:
+- Create two users (User A and User B)
+- User A creates a todo list and a todo
+- User B tries to modify User A's todo using PUT /lists/{listId}/todos/{todoId}
+- The test asserts that the response is 403 Forbidden
+Run the test and confirm it currently FAILS (meaning the vulnerability is present).
+```
+**Exploit test (DE):**
+```
+Schreibe einen Spring Boot Integrationstest, der die Schwachstelle beweist:
+- Erstelle zwei Nutzer (Nutzer A und Nutzer B)
+- Nutzer A erstellt eine Liste und ein Todo
+- Nutzer B versucht, das Todo von Nutzer A zu ändern via PUT /lists/{listId}/todos/{todoId}
+- Der Test prüft, dass die Antwort 403 Forbidden ist
+Führe den Test aus und bestätige, dass er aktuell FEHLSCHLÄGT (Schwachstelle vorhanden).
+```
+
+---
+
+**Fix (EN):**
+```
+Fix the security vulnerability you found. Add the missing ownership check
+following the exact same pattern used in the other methods of the same class.
+Then re-run the test to confirm it now passes.
+```
+**Fix (DE):**
+```
+Behebe die gefundene Schwachstelle. Füge den fehlenden Ownership-Check hinzu,
+genau nach dem Muster, das in den anderen Methoden derselben Klasse verwendet wird.
+Führe dann den Test erneut aus und bestätige, dass er jetzt besteht.
+```
+
+</details>
+
+---
+
+### Acceptance Criteria
+
+- [ ] The vulnerable endpoint is identified (hint: it's a write operation on todos)
+- [ ] A test exists that proves the exploit attempt returns `403 Forbidden`
+- [ ] The fix adds the missing ownership check in the correct layer (application service, not controller)
+- [ ] All backend tests pass: `cd backend && ./mvnw test -Dspring.profiles.active=test`
